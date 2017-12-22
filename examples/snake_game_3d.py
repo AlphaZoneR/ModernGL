@@ -171,7 +171,7 @@ class Example:
             (self.snake.getX() * 2.0, self.snake.getY() * 2.0 + 10, 10),
             (self.snake.getX() * 2.0, self.snake.getY() * 2.0, 0),
             (0, 0, 1)
-            )
+        )
 
         proj = mat4_perspective(90.0, 1, 1.0, 1000.0)
 
