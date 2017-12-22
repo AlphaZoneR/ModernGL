@@ -17,10 +17,14 @@ prog = ctx.program([
     ''')
 ], ['out_float'])
 
-vbo1 = ctx.buffer(np.array([23.15]).astype('f4').tobytes())
+inputs = np.array([23.15])
+
+vbo1 = ctx.buffer(inputs.astype('f4').tobytes())
 vbo2 = ctx.buffer(b'\x00' * vbo1.size)
 
 vao = ctx.simple_vertex_array(prog, vbo1, ['in_float'])
 vao.transform(vbo2)
 
-print(np.frombuffer(vbo2.read(), dtype='f4'))
+outputs = np.frombuffer(vbo2.read(), dtype='f4')
+
+print(outputs)
