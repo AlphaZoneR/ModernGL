@@ -614,7 +614,8 @@ int SilentXErrorHandler(Display * d, XErrorEvent * e) {
 
 GLContext CreateGLContext(PyObject * settings) {
 	GLContext ret = {};
-	int choice = 1;
+	int choice = 2;
+	
 	if(choice == 0){
 		ret = CreateX11Context(settings);
 	}else if(choice == 1){
