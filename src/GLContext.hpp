@@ -24,6 +24,7 @@ struct GLContext {
 	void * display;
 	void * window;
 	void * context;
+	void * buffer;
 	bool standalone;
 };
 
