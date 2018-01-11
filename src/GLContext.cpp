@@ -602,29 +602,368 @@ GLContext LoadCurrentGLContext() {
 	return context;
 }
 
-int SilentXErrorHandler(Display * d, XErrorEvent * e) {
-    return 0;
-}
 
-#include <dlfcn.h>
-
-#include "X11Context.hpp"
-#include "EGLContext.hpp"
-#include "OSMesaContext.hpp"
+#include "common.hpp"
 
 GLContext CreateGLContext(PyObject * settings) {
-	GLContext ret = {};
-	int choice = 2;
 	
-	if(choice == 0){
-		ret = CreateX11Context(settings);
-	}else if(choice == 1){
-		ret = CreateEGLContext(settings);
-	}else if(choice == 2){
-		ret = CreateOSMesaContext(settings);
+	GLContext context = {};
+	
+	int choice = 0;
+	
+	void * handle;  
+	char * error;
+
+
+	if(choice == MGL_X11CTX) {
+
+		handle = dlopen("libX11.so", RTLD_LAZY);
+
+		if(!handle) {
+			MGLError_Set("%s\n", dlerror());
+			return context;
+		}
+
+		my_XOpenDisplay = (my_XOpenDisplay_type) dlsym(handle, "XOpenDisplay");
+		if(!my_XOpenDisplay) {
+			MGLError_Set("Failed to load XOpenDisplay!\n");
+			return context;
+		}
+
+		my_XCloseDisplay = (my_XCloseDisplay_type) dlsym(handle, "XCloseDisplay");
+		if(!my_XCloseDisplay) {
+			MGLError_Set("Failed to load XCloseDisplay!\n");
+			return context;
+		}
+
+		my_XDestroyWindow = (my_XDestroyWindow_type) dlsym(handle, "XDestroyWindow");
+		if(!my_XDestroyWindow) {
+			MGLError_Set("Failed to load XDestroyWindow!\n");
+			return context;
+		}
+
+		my_XCreateWindow = (my_XCreateWindow_type) dlsym(handle, "XCreateWindow");
+		if(!my_XCreateWindow) {
+			MGLError_Set("Failed to load XCreateWindow!\n");
+			return context;
+		}
+
+		my_XSetErrorHandler = (my_XSetErrorHandler_type) dlsym(handle, "XSetErrorHandler");
+		if(!my_XSetErrorHandler) {
+			MGLError_Set("Failed to load XSetErrorHandler!\n");
+			return context;
+		}
+
+		my_XCreateColormap = (my_XCreateColormap_type) dlsym(handle, "XCreateColormap");
+		if(!my_XCreateColormap) {
+			MGLError_Set("Failed to load XCreateColormap!\n");
+			return context;
+		}
+
+		int width = 1;
+		int height = 1;
+		PyObject * size_hint = (settings != Py_None) ? PyDict_GetItemString(settings, "size") : 0;
+		if (size_hint && Py_TYPE(size_hint) == &PyTuple_Type && PyTuple_GET_SIZE(size_hint) == 2) {
+			width = PyLong_AsLong(PyTuple_GET_ITEM(size_hint, 0));
+			height = PyLong_AsLong(PyTuple_GET_ITEM(size_hint, 1));
+			width = width < 1 ? width : 1;
+			height = height < 1 ? height : 1;
+		}
+
+		Display * dpy = my_XOpenDisplay(0);
+
+		if (!dpy) {
+			dpy = my_XOpenDisplay(":0.0");
+		}
+
+		if (!dpy) {
+			MGLError_Set("cannot detect the display");
+			return context;
+		}
+
+		int nelements = 0;
+
+		GLXFBConfig * fbc = glXChooseFBConfig(dpy, 0, 0, &nelements);
+
+		if (!fbc) {
+			MGLError_Set("cannot read the display configuration");
+			my_XCloseDisplay(dpy);
+			return context;
+		}
+
+		static int attributeList[] = {
+			GLX_RGBA,
+			GLX_DOUBLEBUFFER,
+			GLX_RED_SIZE, 8,
+			GLX_GREEN_SIZE, 8,
+			GLX_BLUE_SIZE, 8,
+			GLX_DEPTH_SIZE, 24,
+			GLX_NONE,
+		};
+
+		XVisualInfo * vi = glXChooseVisual(dpy, 0, attributeList);
+
+		if (!vi) {
+			my_XCloseDisplay(dpy);
+
+			MGLError_Set("cannot choose a visual info");
+			return context;
+		}
+
+		XSetWindowAttributes swa;
+		swa.colormap = my_XCreateColormap(dpy, RootWindow(dpy, vi->screen), vi->visual, AllocNone);
+		swa.border_pixel = 0;
+		swa.event_mask = StructureNotifyMask;
+
+		Window win = my_XCreateWindow(dpy, RootWindow(dpy, vi->screen), 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask, &swa);
+
+		if (!win) {
+			my_XCloseDisplay(dpy);
+
+			MGLError_Set("cannot create window");
+			return context;
+		}
+
+		GLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = (GLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((const GLubyte *)"glXCreateContextAttribsARB");
+
+		GLXContext ctx = 0;
+
+		my_XSetErrorHandler(SilentXErrorHandler);
+
+		if (glXCreateContextAttribsARB) {
+			for (int i = 0; i < versions; ++i) {
+				int attribs[] = {
+					GLX_CONTEXT_PROFILE_MASK, GLX_CONTEXT_CORE_PROFILE_BIT,
+					GLX_CONTEXT_MAJOR_VERSION, version[i].major,
+					GLX_CONTEXT_MINOR_VERSION, version[i].minor,
+					0, 0,
+				};
+
+				ctx = glXCreateContextAttribsARB(dpy, *fbc, 0, true, attribs);
+
+				if (ctx) {
+					break;
+				}
+			}
+		}
+
+		if (!ctx) {
+			ctx = glXCreateContext(dpy, vi, 0, GL_TRUE);
+		}
+
+		if (!ctx) {
+			my_XDestroyWindow(dpy, win);
+			my_XCloseDisplay(dpy);
+
+			MGLError_Set("cannot create OpenGL context");
+			return context;
+		}
+
+		my_XSetErrorHandler(0);
+
+		int make_current = glXMakeCurrent(dpy, win, ctx);
+
+		if (!make_current) {
+			glXDestroyContext(dpy, ctx);
+			my_XDestroyWindow(dpy, win);
+			my_XCloseDisplay(dpy);
+
+			MGLError_Set("cannot select OpenGL context");
+			return context;
+		}
+
+		context.display = (void *) dpy;
+		context.window = (void *) win;
+		context.context = (void *) ctx;
+
+		context.standalone = true;
+
+		return context;
+
+	}else if(choice == MGL_EGLCTX) {
+
+		handle = dlopen("libEGL.so.1", RTLD_LAZY);
+
+		if(!handle) {
+			MGLError_Set("%s\n", dlerror());
+			return context;
+		}
+
+		my_eglGetDisplay = (my_eglGetDisplay_type) dlsym(handle, "eglGetDisplay");
+		if(!my_eglGetDisplay) {
+			MGLError_Set("Error loading eglGetDisplay!");
+			return context;
+		}
+
+		my_eglInitialize = (my_eglInitialize_type) dlsym(handle, "eglInitialize");
+		if(!my_eglInitialize) {
+			MGLError_Set("Error loading eglInitialize!");
+			return context;
+		}
+
+		my_eglChooseConfig = (my_eglChooseConfig_type) dlsym(handle, "eglChooseConfig");
+		if(!my_eglChooseConfig) {
+			MGLError_Set("Error loading eglChooseConfig!");
+			return context;
+		}
+
+		my_eglCreateContext = (my_eglCreateContext_type) dlsym(handle, "eglCreateContext");
+		if(!my_eglCreateContext) {
+			MGLError_Set("Error loading eglCreateContext!");
+			return context;
+		}
+
+		my_eglGetError = (my_eglGetError_type) dlsym(handle, "eglGetError");
+		if(!my_eglGetError) {
+			MGLError_Set("Error loading eglGetError!");
+			return context;
+		}
+
+		my_eglMakeCurrent = (my_eglMakeCurrent_type) dlsym(handle, "eglMakeCurrent");
+		if(!my_eglMakeCurrent) {
+			MGLError_Set("Error loading eglMakeCurrent!");
+			return context;
+		}
+
+		EGLDisplay display;
+		EGLConfig config;
+		EGLContext ctx;
+		
+
+		EGLint num_config;
+		
+		display = my_eglGetDisplay(0);
+
+		if(display == EGL_NO_DISPLAY) {
+			MGLError_Set("Error detecting display!");
+			return context;
+		}
+
+		EGLint init = my_eglInitialize(display, NULL, NULL);
+
+		if(init == EGL_BAD_DISPLAY) {
+			MGLError_Set("Error! Display is not an EGL display connection.");
+			return context;
+		}
+
+		static EGLint const attribute_list_egl[] = {
+			EGL_RED_SIZE, 1,
+			EGL_GREEN_SIZE, 1,
+			EGL_BLUE_SIZE, 1,
+			EGL_NONE
+		};
+
+		EGLBoolean cfg = my_eglChooseConfig(display, attribute_list_egl, &config, 1, &num_config);
+
+		if(cfg == EGL_FALSE) {
+			MGLError_Set("Error setting configurations!");
+			return context;
+		}
+
+		ctx = my_eglCreateContext(display, config, EGL_NO_CONTEXT, NULL);
+		EGLint ctx_create_error = my_eglGetError();
+
+		if(ctx == EGL_NO_CONTEXT) {
+			MGLError_Set("Error! Creation of the context failed.");
+		}
+
+		if(ctx_create_error == EGL_BAD_MATCH) {
+			MGLError_Set("Error! The current rendering API is EGL_NONE or the server context state for share_context exists in an address space which cannot be shared with the newly created context!");
+			return context;
+		}else if(ctx_create_error == EGL_BAD_DISPLAY) {
+			MGLError_Set("Error! Display is not an EGL display connection.");
+			return context;
+		}else if(ctx_create_error == EGL_NOT_INITIALIZED) {
+			MGLError_Set("Error! Display has not been initialized.");
+			return context;
+		}else if(ctx_create_error == EGL_BAD_CONFIG) {
+			MGLError_Set("Error! Config is not an EGL frame buffer configuration, or does not support the current rendering API.");
+			return context;
+		}else if(ctx_create_error == EGL_BAD_CONTEXT) {
+			MGLError_Set("Error! Share_context is not an EGL rendering context!");
+			return context;
+		}else if(ctx_create_error == EGL_BAD_ATTRIBUTE) {
+			MGLError_Set("Error! Attrib_list contains an invalid context attribute or if an attribute is not recognized or out of range.");
+			return context;
+		}else if(ctx_create_error == EGL_BAD_ALLOC) {
+			MGLError_Set("Error! There are not enough resources to allocate the new context.");
+			return context;
+		}
+
+		EGLBoolean cpdy = my_eglMakeCurrent(display, NULL, NULL, ctx);
+		
+		if(cpdy == EGL_FALSE) {
+			MGLError_Set("Fail make current");
+			return context;
+		}
+		
+		context.display = display;
+		context.context = ctx;
+
+		return context;
+	}else if(choice ==  MGL_OSMESACTX) {
+
+		handle = dlopen("libOSMesa.so", RTLD_LAZY);
+
+		if(!handle) {
+			MGLError_Set("%s\n", dlerror());
+			return context;
+		}
+
+		my_OSMesaCreateContextExt = (my_OSMesaCreateContextExt_type) dlsym(handle, "OSMesaCreateContextExt");
+		if(!my_OSMesaCreateContextExt) {
+			MGLError_Set("Error loading OSMesaCreateContextExt!");
+			return context;
+		}
+
+		my_OSMesaMakeCurrent = (my_OSMesaMakeCurrent_type) dlsym(handle, "OSMesaMakeCurrent");
+		if(!my_OSMesaMakeCurrent) {
+			MGLError_Set("Error loading OSMesaMakeCurrent!");
+			return context;
+		}
+
+		my_OSMesaDestroyContext = (my_OSMesaDestroyContext_type) dlsym(handle, "OSMesaDestroyContext");
+		if(!my_OSMesaDestroyContext) {
+			MGLError_Set("Error loading OSMesaDestroyContext!");
+			return context;
+		}
+
+		my_OSMesaCreateContextAttribs = (my_OSMesaCreateContextAttribs_type) dlsym(handle, "OSMesaCreateContextAttribs");
+		if(!my_OSMesaCreateContextAttribs) {
+			MGLError_Set("Error loading OSMesaCreateContextAttribs!");
+			return context;
+		}
+
+		const int attribList[] = {
+			OSMESA_PROFILE, OSMESA_COMPAT_PROFILE,
+			OSMESA_CONTEXT_MAJOR_VERSION, 2,	
+			OSMESA_CONTEXT_MINOR_VERSION, 0,
+			0, 0
+		};
+
+		OSMesaContext ctx = my_OSMesaCreateContextAttribs(attribList, NULL);
+
+		if(!ctx){
+			MGLError_Set("OSMesaCreateContextExt failed!\n");
+			return context;
+		}	
+
+		void * buffer = malloc(1 * 1 * 4 * sizeof(GLubyte));
+
+		if(!my_OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, 1, 1)) {
+			MGLError_Set("OSMesaMakeCurrent failed!\n");
+			return context;
+		}
+
+		context.context = ctx;
+		context.buffer = buffer;
+		context.display = NULL;
+		context.window = NULL;
+
+		return context;
 	}
 
-	return ret;
+	return context;
 }
 
 void DestroyGLContext(const GLContext & context) {
