@@ -138,18 +138,18 @@ void InitModernContext() {
 	}
 
 	HWND loader_hwnd = CreateWindow(
-		"ContextLoader",                // lpClassName
-		0,                              // lpWindowName
-		0,                              // dwStyle
-		0,                              // x
-		0,                              // y
-		0,                              // nWidth
-		0,                              // nHeight
-		0,                              // hWndParent
-		0,                              // hMenu
-		hinst,                          // hInstance
-		0                               // lpParam
-	);
+	                       "ContextLoader",                // lpClassName
+	                       0,                              // lpWindowName
+	                       0,                              // dwStyle
+	                       0,                              // x
+	                       0,                              // y
+	                       0,                              // nWidth
+	                       0,                              // nHeight
+	                       0,                              // hWndParent
+	                       0,                              // hMenu
+	                       hinst,                          // hInstance
+	                       0                               // lpParam
+	                   );
 
 	if (!loader_hwnd) {
 		return;
@@ -261,19 +261,19 @@ GLContext CreateGLContext(PyObject * settings) {
 	}
 
 	HWND hwnd = CreateWindowEx(
-		0,                                   // exStyle
-		"StandaloneContext",                 // lpClassName
-		0,                                   // lpWindowName
-		0,                                   // dwStyle
-		0,                                   // x
-		0,                                   // y
-		width,                               // nWidth
-		height,                              // nHeight
-		0,                                   // hWndParent
-		0,                                   // hMenu
-		inst,                                // hInstance
-		0                                    // lpParam
-	);
+	                0,                                   // exStyle
+	                "StandaloneContext",                 // lpClassName
+	                0,                                   // lpWindowName
+	                0,                                   // dwStyle
+	                0,                                   // x
+	                0,                                   // y
+	                width,                               // nWidth
+	                height,                              // nHeight
+	                0,                                   // hWndParent
+	                0,                                   // hMenu
+	                inst,                                // hInstance
+	                0                                    // lpParam
+	            );
 
 	if (!hwnd) {
 		MGLError_Set("cannot create window");
@@ -487,17 +487,17 @@ GLContext CreateGLContext(PyObject * settings) {
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
 
 	glFramebufferRenderbuffer(
-		GL_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0,
-		GL_RENDERBUFFER,
-		color_rbo
+	    GL_FRAMEBUFFER,
+	    GL_COLOR_ATTACHMENT0,
+	    GL_RENDERBUFFER,
+	    color_rbo
 	);
 
 	glFramebufferRenderbuffer(
-		GL_FRAMEBUFFER,
-		GL_DEPTH_ATTACHMENT,
-		GL_RENDERBUFFER,
-		depth_rbo
+	    GL_FRAMEBUFFER,
+	    GL_DEPTH_ATTACHMENT,
+	    GL_RENDERBUFFER,
+	    depth_rbo
 	);
 
 	int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -606,56 +606,56 @@ GLContext LoadCurrentGLContext() {
 #include "common.hpp"
 
 GLContext CreateGLContext(PyObject * settings) {
-	
+
 	GLContext context = {};
-	
+
 	int choice = 0;
-	
-	void * handle;  
+
+	void * handle;
 	char * error;
 
 
-	if(choice == MGL_X11CTX) {
+	if (choice == MGL_X11CTX) {
 
 		handle = dlopen("libX11.so", RTLD_LAZY);
 
-		if(!handle) {
+		if (!handle) {
 			MGLError_Set("%s\n", dlerror());
 			return context;
 		}
 
 		my_XOpenDisplay = (my_XOpenDisplay_type) dlsym(handle, "XOpenDisplay");
-		if(!my_XOpenDisplay) {
+		if (!my_XOpenDisplay) {
 			MGLError_Set("Failed to load XOpenDisplay!\n");
 			return context;
 		}
 
 		my_XCloseDisplay = (my_XCloseDisplay_type) dlsym(handle, "XCloseDisplay");
-		if(!my_XCloseDisplay) {
+		if (!my_XCloseDisplay) {
 			MGLError_Set("Failed to load XCloseDisplay!\n");
 			return context;
 		}
 
 		my_XDestroyWindow = (my_XDestroyWindow_type) dlsym(handle, "XDestroyWindow");
-		if(!my_XDestroyWindow) {
+		if (!my_XDestroyWindow) {
 			MGLError_Set("Failed to load XDestroyWindow!\n");
 			return context;
 		}
 
 		my_XCreateWindow = (my_XCreateWindow_type) dlsym(handle, "XCreateWindow");
-		if(!my_XCreateWindow) {
+		if (!my_XCreateWindow) {
 			MGLError_Set("Failed to load XCreateWindow!\n");
 			return context;
 		}
 
 		my_XSetErrorHandler = (my_XSetErrorHandler_type) dlsym(handle, "XSetErrorHandler");
-		if(!my_XSetErrorHandler) {
+		if (!my_XSetErrorHandler) {
 			MGLError_Set("Failed to load XSetErrorHandler!\n");
 			return context;
 		}
 
 		my_XCreateColormap = (my_XCreateColormap_type) dlsym(handle, "XCreateColormap");
-		if(!my_XCreateColormap) {
+		if (!my_XCreateColormap) {
 			MGLError_Set("Failed to load XCreateColormap!\n");
 			return context;
 		}
@@ -780,47 +780,47 @@ GLContext CreateGLContext(PyObject * settings) {
 
 		return context;
 
-	}else if(choice == MGL_EGLCTX) {
+	} else if (choice == MGL_EGLCTX) {
 
 		handle = dlopen("libEGL.so.1", RTLD_LAZY);
 
-		if(!handle) {
+		if (!handle) {
 			MGLError_Set("%s\n", dlerror());
 			return context;
 		}
 
 		my_eglGetDisplay = (my_eglGetDisplay_type) dlsym(handle, "eglGetDisplay");
-		if(!my_eglGetDisplay) {
+		if (!my_eglGetDisplay) {
 			MGLError_Set("Error loading eglGetDisplay!");
 			return context;
 		}
 
 		my_eglInitialize = (my_eglInitialize_type) dlsym(handle, "eglInitialize");
-		if(!my_eglInitialize) {
+		if (!my_eglInitialize) {
 			MGLError_Set("Error loading eglInitialize!");
 			return context;
 		}
 
 		my_eglChooseConfig = (my_eglChooseConfig_type) dlsym(handle, "eglChooseConfig");
-		if(!my_eglChooseConfig) {
+		if (!my_eglChooseConfig) {
 			MGLError_Set("Error loading eglChooseConfig!");
 			return context;
 		}
 
 		my_eglCreateContext = (my_eglCreateContext_type) dlsym(handle, "eglCreateContext");
-		if(!my_eglCreateContext) {
+		if (!my_eglCreateContext) {
 			MGLError_Set("Error loading eglCreateContext!");
 			return context;
 		}
 
 		my_eglGetError = (my_eglGetError_type) dlsym(handle, "eglGetError");
-		if(!my_eglGetError) {
+		if (!my_eglGetError) {
 			MGLError_Set("Error loading eglGetError!");
 			return context;
 		}
 
 		my_eglMakeCurrent = (my_eglMakeCurrent_type) dlsym(handle, "eglMakeCurrent");
-		if(!my_eglMakeCurrent) {
+		if (!my_eglMakeCurrent) {
 			MGLError_Set("Error loading eglMakeCurrent!");
 			return context;
 		}
@@ -828,20 +828,20 @@ GLContext CreateGLContext(PyObject * settings) {
 		EGLDisplay display;
 		EGLConfig config;
 		EGLContext ctx;
-		
+
 
 		EGLint num_config;
-		
+
 		display = my_eglGetDisplay(0);
 
-		if(display == EGL_NO_DISPLAY) {
+		if (display == EGL_NO_DISPLAY) {
 			MGLError_Set("Error detecting display!");
 			return context;
 		}
 
 		EGLint init = my_eglInitialize(display, NULL, NULL);
 
-		if(init == EGL_BAD_DISPLAY) {
+		if (init == EGL_BAD_DISPLAY) {
 			MGLError_Set("Error! Display is not an EGL display connection.");
 			return context;
 		}
@@ -855,7 +855,7 @@ GLContext CreateGLContext(PyObject * settings) {
 
 		EGLBoolean cfg = my_eglChooseConfig(display, attribute_list_egl, &config, 1, &num_config);
 
-		if(cfg == EGL_FALSE) {
+		if (cfg == EGL_FALSE) {
 			MGLError_Set("Error setting configurations!");
 			return context;
 		}
@@ -863,94 +863,94 @@ GLContext CreateGLContext(PyObject * settings) {
 		ctx = my_eglCreateContext(display, config, EGL_NO_CONTEXT, NULL);
 		EGLint ctx_create_error = my_eglGetError();
 
-		if(ctx == EGL_NO_CONTEXT) {
+		if (ctx == EGL_NO_CONTEXT) {
 			MGLError_Set("Error! Creation of the context failed.");
 		}
 
-		if(ctx_create_error == EGL_BAD_MATCH) {
+		if (ctx_create_error == EGL_BAD_MATCH) {
 			MGLError_Set("Error! The current rendering API is EGL_NONE or the server context state for share_context exists in an address space which cannot be shared with the newly created context!");
 			return context;
-		}else if(ctx_create_error == EGL_BAD_DISPLAY) {
+		} else if (ctx_create_error == EGL_BAD_DISPLAY) {
 			MGLError_Set("Error! Display is not an EGL display connection.");
 			return context;
-		}else if(ctx_create_error == EGL_NOT_INITIALIZED) {
+		} else if (ctx_create_error == EGL_NOT_INITIALIZED) {
 			MGLError_Set("Error! Display has not been initialized.");
 			return context;
-		}else if(ctx_create_error == EGL_BAD_CONFIG) {
+		} else if (ctx_create_error == EGL_BAD_CONFIG) {
 			MGLError_Set("Error! Config is not an EGL frame buffer configuration, or does not support the current rendering API.");
 			return context;
-		}else if(ctx_create_error == EGL_BAD_CONTEXT) {
+		} else if (ctx_create_error == EGL_BAD_CONTEXT) {
 			MGLError_Set("Error! Share_context is not an EGL rendering context!");
 			return context;
-		}else if(ctx_create_error == EGL_BAD_ATTRIBUTE) {
+		} else if (ctx_create_error == EGL_BAD_ATTRIBUTE) {
 			MGLError_Set("Error! Attrib_list contains an invalid context attribute or if an attribute is not recognized or out of range.");
 			return context;
-		}else if(ctx_create_error == EGL_BAD_ALLOC) {
+		} else if (ctx_create_error == EGL_BAD_ALLOC) {
 			MGLError_Set("Error! There are not enough resources to allocate the new context.");
 			return context;
 		}
 
 		EGLBoolean cpdy = my_eglMakeCurrent(display, NULL, NULL, ctx);
-		
-		if(cpdy == EGL_FALSE) {
+
+		if (cpdy == EGL_FALSE) {
 			MGLError_Set("Fail make current");
 			return context;
 		}
-		
+
 		context.display = display;
 		context.context = ctx;
 
 		return context;
-	}else if(choice ==  MGL_OSMESACTX) {
+	} else if (choice ==  MGL_OSMESACTX) {
 
 		handle = dlopen("libOSMesa.so", RTLD_LAZY);
 
-		if(!handle) {
+		if (!handle) {
 			MGLError_Set("%s\n", dlerror());
 			return context;
 		}
 
 		my_OSMesaCreateContextExt = (my_OSMesaCreateContextExt_type) dlsym(handle, "OSMesaCreateContextExt");
-		if(!my_OSMesaCreateContextExt) {
+		if (!my_OSMesaCreateContextExt) {
 			MGLError_Set("Error loading OSMesaCreateContextExt!");
 			return context;
 		}
 
 		my_OSMesaMakeCurrent = (my_OSMesaMakeCurrent_type) dlsym(handle, "OSMesaMakeCurrent");
-		if(!my_OSMesaMakeCurrent) {
+		if (!my_OSMesaMakeCurrent) {
 			MGLError_Set("Error loading OSMesaMakeCurrent!");
 			return context;
 		}
 
 		my_OSMesaDestroyContext = (my_OSMesaDestroyContext_type) dlsym(handle, "OSMesaDestroyContext");
-		if(!my_OSMesaDestroyContext) {
+		if (!my_OSMesaDestroyContext) {
 			MGLError_Set("Error loading OSMesaDestroyContext!");
 			return context;
 		}
 
 		my_OSMesaCreateContextAttribs = (my_OSMesaCreateContextAttribs_type) dlsym(handle, "OSMesaCreateContextAttribs");
-		if(!my_OSMesaCreateContextAttribs) {
+		if (!my_OSMesaCreateContextAttribs) {
 			MGLError_Set("Error loading OSMesaCreateContextAttribs!");
 			return context;
 		}
 
 		const int attribList[] = {
 			OSMESA_PROFILE, OSMESA_COMPAT_PROFILE,
-			OSMESA_CONTEXT_MAJOR_VERSION, 2,	
+			OSMESA_CONTEXT_MAJOR_VERSION, 2,
 			OSMESA_CONTEXT_MINOR_VERSION, 0,
 			0, 0
 		};
 
 		OSMesaContext ctx = my_OSMesaCreateContextAttribs(attribList, NULL);
 
-		if(!ctx){
+		if (!ctx) {
 			MGLError_Set("OSMesaCreateContextExt failed!\n");
 			return context;
-		}	
+		}
 
 		void * buffer = malloc(1 * 1 * 4 * sizeof(GLubyte));
 
-		if(!my_OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, 1, 1)) {
+		if (!my_OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, 1, 1)) {
 			MGLError_Set("OSMesaMakeCurrent failed!\n");
 			return context;
 		}
