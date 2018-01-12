@@ -33,8 +33,6 @@ my_CreateContextAttribs_type my_CreateContextAttribs;
 
 // Linux
 
-
-
 #include <dlfcn.h>
 #include <GL/gl.h>
 #include <X11/Xlib.h>
@@ -42,7 +40,7 @@ my_CreateContextAttribs_type my_CreateContextAttribs;
 
 enum {
     MGL_X11CTX = 0,
-	MGL_EGLCTX = 1,	
+	MGL_EGLCTX = 1,
     MGL_OSMESACTX = 2
 } LINUX_CTX_TYPE;
 
@@ -61,7 +59,6 @@ typedef XID Window;
 #define GLX_CONTEXT_PROFILE_MASK 0x9126
 #define GLX_CONTEXT_CORE_PROFILE_BIT 0x0001
 
-
 extern GLXFBConfig *glXChooseFBConfig( Display *dpy, int screen, const int *attribList, int *nitems );
 extern XVisualInfo* glXChooseVisual( Display *dpy, int screen, int *attribList );
 
@@ -78,14 +75,12 @@ typedef Window (* my_XCreateWindow_type)(Display * display, Window window, int x
 typedef XErrorHandler (* my_XSetErrorHandler_type)(XErrorHandler);
 typedef Colormap (* my_XCreateColormap_type)(Display * display, Window window, Visual * visual, int alloc);
 
-
 my_XOpenDisplay_type my_XOpenDisplay;
 my_XCloseDisplay_type my_XCloseDisplay;
 my_XDestroyWindow_type my_XDestroyWindow;
 my_XCreateWindow_type my_XCreateWindow;
 my_XSetErrorHandler_type my_XSetErrorHandler;
 my_XCreateColormap_type my_XCreateColormap;
-
 
 // EGL
 
