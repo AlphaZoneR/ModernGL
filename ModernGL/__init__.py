@@ -3032,6 +3032,10 @@ def create_standalone_context(require=None, **settings) -> 'Context':
             Context: context
     '''
 
+    backend = os.environ.get('MODERNGL_BACKEND')
+    if backend is not None:
+        settings['backend'] = backend
+
     ctx = Context.__new__(Context)
     ctx._screen = Framebuffer.__new__(Framebuffer)
     ctx.mglo, ctx._screen.mglo, ctx.version_code = mgl.create_standalone_context(settings)
