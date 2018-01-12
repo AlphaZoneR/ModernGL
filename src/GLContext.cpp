@@ -138,18 +138,18 @@ void InitModernContext() {
 	}
 
 	HWND loader_hwnd = CreateWindow(
-	                       "ContextLoader",                // lpClassName
-	                       0,                              // lpWindowName
-	                       0,                              // dwStyle
-	                       0,                              // x
-	                       0,                              // y
-	                       0,                              // nWidth
-	                       0,                              // nHeight
-	                       0,                              // hWndParent
-	                       0,                              // hMenu
-	                       hinst,                          // hInstance
-	                       0                               // lpParam
-	                   );
+		"ContextLoader",                // lpClassName
+		0,                              // lpWindowName
+		0,                              // dwStyle
+		0,                              // x
+		0,                              // y
+		0,                              // nWidth
+		0,                              // nHeight
+		0,                              // hWndParent
+		0,                              // hMenu
+		hinst,                          // hInstance
+		0                               // lpParam
+	);
 
 	if (!loader_hwnd) {
 		return;
@@ -261,19 +261,19 @@ GLContext CreateGLContext(PyObject * settings) {
 	}
 
 	HWND hwnd = CreateWindowEx(
-	                0,                                   // exStyle
-	                "StandaloneContext",                 // lpClassName
-	                0,                                   // lpWindowName
-	                0,                                   // dwStyle
-	                0,                                   // x
-	                0,                                   // y
-	                width,                               // nWidth
-	                height,                              // nHeight
-	                0,                                   // hWndParent
-	                0,                                   // hMenu
-	                inst,                                // hInstance
-	                0                                    // lpParam
-	            );
+		0,                                   // exStyle
+		"StandaloneContext",                 // lpClassName
+		0,                                   // lpWindowName
+		0,                                   // dwStyle
+		0,                                   // x
+		0,                                   // y
+		width,                               // nWidth
+		height,                              // nHeight
+		0,                                   // hWndParent
+		0,                                   // hMenu
+		inst,                                // hInstance
+		0                                    // lpParam
+	);
 
 	if (!hwnd) {
 		MGLError_Set("cannot create window");
@@ -487,17 +487,17 @@ GLContext CreateGLContext(PyObject * settings) {
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
 
 	glFramebufferRenderbuffer(
-	    GL_FRAMEBUFFER,
-	    GL_COLOR_ATTACHMENT0,
-	    GL_RENDERBUFFER,
-	    color_rbo
+		GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_RENDERBUFFER,
+		color_rbo
 	);
 
 	glFramebufferRenderbuffer(
-	    GL_FRAMEBUFFER,
-	    GL_DEPTH_ATTACHMENT,
-	    GL_RENDERBUFFER,
-	    depth_rbo
+		GL_FRAMEBUFFER,
+		GL_DEPTH_ATTACHMENT,
+		GL_RENDERBUFFER,
+		depth_rbo
 	);
 
 	int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
