@@ -37,7 +37,8 @@ __all__ = [
     'create_standalone_context',
     'detect_format',
     'depth_func',
-    'blend_func'
+    'blend_func',
+    'multisample'
 ]
 
 GL_ZERO = 0x0000
@@ -2278,6 +2279,19 @@ class Context:
     @blend_func.setter
     def blend_func(self, value):
         self.mglo.blend_func = tuple(value)
+
+    @property
+    def multisample(self) -> int:
+        '''
+            int: Set the default depth func.
+        '''
+
+        raise Exception()
+
+    @multisample.setter
+    def multisample(self, value):
+        self.mglo.multisample = value
+
 
 
     @property

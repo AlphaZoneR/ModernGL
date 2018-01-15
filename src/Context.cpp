@@ -2415,7 +2415,6 @@ int MGLContext_set_blend_func(MGLContext * self, PyObject * value) {
 	return 0;
 }
 
-
 #define MGLContext_func_cvt(x) (x[0] * 256 + x[1])
 
 int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
@@ -2472,6 +2471,17 @@ int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
 	}
 
 	return 0;
+}
+
+int MGLContext_multisample_func(MGLContext * self, PyObject * value) {
+	if(value == Py_True) {
+		self->gl.Enable(GL_MULTISAMPLE);
+		return 0;
+	}else if(value == Py_False) {
+		self->gl.Disable(GL_MULTISAMPLE);
+		return 0;
+	}
+	return -1;
 }
 
 PyObject * MGLContext_get_default_texture_unit(MGLContext * self) {
@@ -3092,6 +3102,8 @@ PyGetSetDef MGLContext_tp_getseters[] = {
 
 	{(char *)"depth_func", 0, (setter)MGLContext_set_depth_func, 0, 0},
 	{(char *)"blend_func", 0, (setter)MGLContext_set_blend_func, 0, 0},
+
+	{(char *)"multisample", 0, (setter)MGLContext_multisample_func, 0, 0},
 
 	{(char *)"fbo", (getter)MGLContext_get_fbo, 0, 0, 0},
 
