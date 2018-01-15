@@ -2397,6 +2397,83 @@ int MGLContext_set_point_size(MGLContext * self, PyObject * value) {
 	return 0;
 }
 
+int MGLContext_set_blend_func(MGLContext * self, PyObject * value) {
+
+	if(PyTuple_GET_SIZE(value) != 2){
+		return -1;
+	}
+
+	int sfract = (int)PyLong_AsLong(PyTuple_GET_ITEM(value, 0));
+	int dfract = (int)PyLong_AsLong(PyTuple_GET_ITEM(value, 1));
+
+	if(PyErr_Occurred()) {
+		return -1;
+	}
+
+	self->gl.BlendFunc(sfract, dfract);
+
+	return 0;
+}
+
+
+#define MGLContext_func_cvt(x) (x[0] * 256 + x[1])
+
+int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
+	const char * fun = PyUnicode_AsUTF8(val);
+
+	if(PyErr_Occurred()) {
+		return -1;
+	}
+
+	switch(MGLContext_func_cvt(fun)) {
+		case MGLContext_func_cvt("<="):{
+			self->gl.DepthFunc(GL_LEQUAL);
+			break;
+		}
+
+		case MGLContext_func_cvt("<"):{
+			self->gl.DepthFunc(GL_LESS);
+			break;
+		}
+
+		case MGLContext_func_cvt(">="):{
+			self->gl.DepthFunc(GL_GEQUAL);
+			break;
+		}
+
+		case MGLContext_func_cvt(">"):{
+			self->gl.DepthFunc(GL_GREATER);
+			break;
+		}
+
+		case MGLContext_func_cvt("=="):{
+			self->gl.DepthFunc(GL_EQUAL);
+			break;
+		}
+		
+		case MGLContext_func_cvt("!="):{
+			self->gl.DepthFunc(GL_NOTEQUAL);
+			break;
+		}		
+
+		case MGLContext_func_cvt("0"):{
+			self->gl.DepthFunc(GL_NEVER);
+			break;
+		}
+
+		case MGLContext_func_cvt("1"):{
+			self->gl.DepthFunc(GL_ALWAYS);
+			break;
+		}	
+
+		default:{
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 PyObject * MGLContext_get_default_texture_unit(MGLContext * self) {
 	return PyLong_FromLong(self->default_texture_unit);
 }
@@ -3012,6 +3089,9 @@ PyObject * MGLContext_get_info(MGLContext * self, void * closure) {
 PyGetSetDef MGLContext_tp_getseters[] = {
 	{(char *)"line_width", (getter)MGLContext_get_line_width, (setter)MGLContext_set_line_width, 0, 0},
 	{(char *)"point_size", (getter)MGLContext_get_point_size, (setter)MGLContext_set_point_size, 0, 0},
+
+	{(char *)"depth_func", 0, (setter)MGLContext_set_depth_func, 0, 0},
+	{(char *)"blend_func", 0, (setter)MGLContext_set_blend_func, 0, 0},
 
 	{(char *)"fbo", (getter)MGLContext_get_fbo, 0, 0, 0},
 

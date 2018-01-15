@@ -36,8 +36,32 @@ __all__ = [
     'create_context',
     'create_standalone_context',
     'detect_format',
+    'depth_func',
+    'blend_func'
 ]
 
+GL_ZERO = 0x0000
+
+GL_ONE = 0x0001
+
+GL_SRC_COLOR = 0x0300
+
+GL_ONE_MINUS_SRC_COLOR = 0x0301
+
+GL_DST_COLOR = 0x0306
+
+GL_ONE_MINUS_DST_COLOR = 0x0307
+
+GL_SRC_ALPHA = 0x0302
+
+GL_ONE_MINUS_SRC_ALPHA = 0x0303
+
+GL_DST_ALPHA = 0x0304
+
+GL_ONE_MINUS_DST_ALPHA = 0x0305
+
+default_blending = (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+premultiplied_alpha = (GL_SRC_ALPHA, GL_ONE)
 
 class Error(Exception):
     '''
@@ -2230,6 +2254,31 @@ class Context:
     @point_size.setter
     def point_size(self, value):
         self.mglo.point_size = value
+
+    @property
+    def depth_func(self) -> int:
+        '''
+            int: Set the default depth func.
+        '''
+
+        raise Exception()
+
+    @depth_func.setter
+    def depth_func(self, value):
+        self.mglo.depth_func = value
+
+    @property
+    def blend_func(self) -> int:
+        '''
+            int: Set the default depth func.
+        '''
+
+        raise Exception()
+
+    @blend_func.setter
+    def blend_func(self, value):
+        self.mglo.blend_func = tuple(value)
+
 
     @property
     def viewport(self) -> Tuple[int, int, int, int]:
