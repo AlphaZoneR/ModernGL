@@ -2398,8 +2398,10 @@ int MGLContext_set_point_size(MGLContext * self, PyObject * value) {
 }
 
 int MGLContext_set_blend_func(MGLContext * self, PyObject * value) {
+	// TODO: Py_TYPE(value) == &PyTuple_Type
 
 	if(PyTuple_GET_SIZE(value) != 2){
+		// TODO: message
 		return -1;
 	}
 
@@ -2424,13 +2426,13 @@ int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
 		return -1;
 	}
 
-	switch(MGLContext_func_cvt(fun)) {
-		case MGLContext_func_cvt("<="):{
+	switch (MGLContext_func_cvt(fun)) {
+		case MGLContext_func_cvt("<="): {
 			self->gl.DepthFunc(GL_LEQUAL);
 			break;
 		}
 
-		case MGLContext_func_cvt("<"):{
+		case MGLContext_func_cvt("<"):{ // TODO: format similar as above
 			self->gl.DepthFunc(GL_LESS);
 			break;
 		}
@@ -2449,11 +2451,11 @@ int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
 			self->gl.DepthFunc(GL_EQUAL);
 			break;
 		}
-		
+
 		case MGLContext_func_cvt("!="):{
 			self->gl.DepthFunc(GL_NOTEQUAL);
 			break;
-		}		
+		}
 
 		case MGLContext_func_cvt("0"):{
 			self->gl.DepthFunc(GL_NEVER);
@@ -2463,9 +2465,10 @@ int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
 		case MGLContext_func_cvt("1"):{
 			self->gl.DepthFunc(GL_ALWAYS);
 			break;
-		}	
+		}
 
 		default:{
+			// TODO: message
 			return -1;
 		}
 	}
@@ -2476,12 +2479,13 @@ int MGLContext_set_depth_func(MGLContext * self, PyObject * val) {
 int MGLContext_multisample_func(MGLContext * self, PyObject * value) {
 	if(value == Py_True) {
 		self->gl.Enable(GL_MULTISAMPLE);
-		return 0;
 	}else if(value == Py_False) {
 		self->gl.Disable(GL_MULTISAMPLE);
-		return 0;
+	} else {
+		// TODO: message
+		return -1;
 	}
-	return -1;
+	return 0;
 }
 
 PyObject * MGLContext_get_default_texture_unit(MGLContext * self) {
@@ -3097,6 +3101,8 @@ PyObject * MGLContext_get_info(MGLContext * self, void * closure) {
 }
 
 PyGetSetDef MGLContext_tp_getseters[] = {
+	{(char *)"fbo", (getter)MGLContext_get_fbo, 0, 0, 0},
+
 	{(char *)"line_width", (getter)MGLContext_get_line_width, (setter)MGLContext_set_line_width, 0, 0},
 	{(char *)"point_size", (getter)MGLContext_get_point_size, (setter)MGLContext_set_point_size, 0, 0},
 
@@ -3104,8 +3110,6 @@ PyGetSetDef MGLContext_tp_getseters[] = {
 	{(char *)"blend_func", 0, (setter)MGLContext_set_blend_func, 0, 0},
 
 	{(char *)"multisample", 0, (setter)MGLContext_multisample_func, 0, 0},
-
-	{(char *)"fbo", (getter)MGLContext_get_fbo, 0, 0, 0},
 
 	{(char *)"wireframe", (getter)MGLContext_get_wireframe, (setter)MGLContext_set_wireframe, 0, 0},
 	{(char *)"front_face", (getter)MGLContext_get_front_face, (setter)MGLContext_set_front_face, 0, 0},

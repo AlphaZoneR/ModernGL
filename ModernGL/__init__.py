@@ -36,9 +36,9 @@ __all__ = [
     'create_context',
     'create_standalone_context',
     'detect_format',
-    'depth_func',
-    'blend_func',
-    'multisample'
+    'GL_ZERO', # TODO: ...,
+    'default_blending',
+    'premultiplied_alpha',
 ]
 
 GL_ZERO = 0x0000
@@ -63,6 +63,7 @@ GL_ONE_MINUS_DST_ALPHA = 0x0305
 
 default_blending = (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 premultiplied_alpha = (GL_SRC_ALPHA, GL_ONE)
+
 
 class Error(Exception):
     '''
